@@ -39,7 +39,7 @@ function updateInfo() {
 }
 
 function initMap() {
-  map = L.map('map').setView([50.06143, 19.93658], 13);
+  map = L.map('map').setView([50.06893876588588, 19.954984487622337], 17);
 
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
@@ -83,8 +83,8 @@ function stopCamera() {
   video.srcObject = null;
   takePhotoBtn.disabled = true;
   stopCameraBtn.disabled = true;
-  
-    showMessage('Kamerya zatrzymana.');
+
+  showMessage(`Kamerya zatrzymana.`);
 }
 
 async function switchCamera() {
@@ -126,11 +126,36 @@ function getLocation() {
   });
 }
 
+async function shareRecord() {
+  if (!photoBlob || !coords) return;
+
+  const file = new File([photoBlob], 'photo.jpg', { type: 'image/jpeg' });
+  const mapUrl = `https://www.openstreetmap.org/?mlat=${coords.lat}&mlon=${coords.lng}#map=17/${coords.lat}/${coords.lng}`;
+
+  const text = `Zdjęcie wykonano tutaj:
+Szerokość: ${coords.lat.toFixed(6)}
+Długość: ${coords.lng.toFixed(6)}
+Mapa: ${mapUrl}`;
+
+  if (navigator.share && navigator.canShare?.({ files: [file] })) {
+    await navigator.share({
+      title: 'GeoSnap',
+      text,
+      files: [file]
+    });
+    showMessage('Udostępniono zdjęcie i lokalizację.');
+    return;
+  }
+  await navigator.clipboard.writeText(text);
+  showMessage('Skopiowano dane do schowka.');
+}
+
 startCameraBtn.addEventListener('click', startCamera);
 switchCameraBtn.addEventListener('click', switchCamera);
 takePhotoBtn.addEventListener('click', takePhoto);
 stopCameraBtn.addEventListener('click', stopCamera);
 getLocationBtn.addEventListener('click', getLocation);
+shareBtn.addEventListener('click', shareRecord);
 
 initMap();
 updateInfo();
